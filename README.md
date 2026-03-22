@@ -182,6 +182,60 @@ Secrétaire submits document
 
 ---
 
+## Docker
+
+The easiest way to run the full stack (Node.js + MySQL) with a single command.
+
+### 1. Configure your `.env`
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=projectusers
+SESSION_SECRET=any-random-string
+PORT=3009
+```
+
+> `DB_HOST` stays `localhost` in `.env` — Docker Compose overrides it to `db` internally.
+
+### 2. Build and start
+
+```bash
+docker-compose up --build
+```
+
+This will:
+- Start a MySQL 8 container and auto-create all tables via `init.sql`
+- Wait for MySQL to be healthy before starting the app
+- Start the Node.js app on the port defined in `.env`
+
+### 3. Open in browser
+
+```
+http://localhost:3009
+```
+
+Login with: `admin@example.com` / `admin123`
+
+### Useful commands
+
+```bash
+# Run in background
+docker-compose up --build -d
+
+# Stop containers
+docker-compose down
+
+# Stop and delete all data (DB + uploads)
+docker-compose down -v
+
+# View logs
+docker-compose logs -f app
+```
+
+---
+
 ## License
 
 ISC
