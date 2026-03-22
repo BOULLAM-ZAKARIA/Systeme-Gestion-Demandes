@@ -30,7 +30,7 @@ const upload = multer({ storage: storage });
 
 //configuration de la session
 router.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
     resave: false,
     saveUninitialized: false
 }));
