@@ -182,57 +182,147 @@ Secrétaire submits document
 
 ---
 
-## Docker
+## Running with Docker
 
-The easiest way to run the full stack (Node.js + MySQL) with a single command.
+Docker is the recommended way to run this project — no need to install MySQL or configure anything manually. One command starts everything.
 
-### 1. Configure your `.env`
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed
+- Docker Desktop must be **running** (look for the whale icon in your taskbar)
+
+> On Windows: open Docker Desktop from the Start menu and wait until it says **"Engine running"** before continuing.
+
+---
+
+### Step 1 — Clone the repository
+
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+```
+
+---
+
+### Step 2 — Create your `.env` file
+
+Copy the example file:
+
+```bash
+# On Windows (PowerShell)
+copy .env.example .env
+
+# On Mac/Linux
+cp .env.example .env
+```
+
+Edit `.env` with your values:
 
 ```env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=root
 DB_NAME=projectusers
-SESSION_SECRET=any-random-string
+SESSION_SECRET=any-random-secret-string
 PORT=3009
 ```
 
-> `DB_HOST` stays `localhost` in `.env` — Docker Compose overrides it to `db` internally.
+> **Note:** Keep `DB_HOST=localhost` in your `.env` — Docker Compose automatically overrides it to `db` (the internal MySQL service name) inside the containers.
 
-### 2. Build and start
+---
+
+### Step 3 — Build and start
+
+Open a terminal in the project folder and run:
 
 ```bash
 docker-compose up --build
 ```
 
-This will:
-- Start a MySQL 8 container and auto-create all tables via `init.sql`
-- Wait for MySQL to be healthy before starting the app
-- Start the Node.js app on the port defined in `.env`
+**What happens:**
 
-### 3. Open in browser
+```
+Step 1 → Docker builds the Node.js app image
+Step 2 → MySQL container starts and runs init.sql (creates tables + admin user)
+Step 3 → App waits for MySQL to be healthy
+Step 4 → App starts and connects to MySQL
+Step 5 → Server is ready at http://localhost:3009
+```
+
+You should see these lines in the terminal when everything is ready:
+
+```
+ocp_mysql  | ready for connections
+ocp_app    | connected successfully!
+ocp_app    | App is listening on url http://localhost:3009
+```
+
+---
+
+### Step 4 — Open in browser
 
 ```
 http://localhost:3009
 ```
 
-Login with: `admin@example.com` / `admin123`
+Login with the default admin account:
 
-### Useful commands
+| Field | Value |
+|-------|-------|
+| Email | `admin@example.com` |
+| Password | `admin123` |
+
+---
+
+### Useful Docker commands
 
 ```bash
-# Run in background
+# Start in background (detached mode)
 docker-compose up --build -d
 
-# Stop containers
+# View live logs
+docker-compose logs -f
+
+# View logs for the app only
+docker-compose logs -f app
+
+# Stop containers (keeps data)
 docker-compose down
 
-# Stop and delete all data (DB + uploads)
+# Stop and delete all data (database + uploads)
 docker-compose down -v
 
-# View logs
-docker-compose logs -f app
+# Restart after code changes
+docker-compose up --build
+
+# Check running containers
+docker ps
 ```
+
+---
+
+### Troubleshooting
+
+**Docker Desktop not running**
+```
+open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified
+```
+→ Open Docker Desktop and wait for it to fully start, then retry.
+
+**Port 3009 already in use**
+```
+Bind for 0.0.0.0:3009 failed: port is already allocated
+```
+→ Change `PORT=3009` to another port (e.g. `3010`) in your `.env`, then run `docker-compose up --build` again.
+
+**Module not found errors**
+```
+Error: Cannot find module 'some-package'
+```
+→ Run `docker-compose up --build` (the `--build` flag forces a fresh install of dependencies).
+
+**MySQL connection refused on first start**
+→ The app waits for MySQL to be healthy before starting. If it fails, just run `docker-compose up` again (without `--build`) — MySQL data is already initialized.
 
 ---
 
