@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faire une demande</title>
+    <style>
+        button.ok-button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button.ok-button:hover {
+            background-color: #45a049;
+        }
+        .logout-container {
+        position: fixed;
+        top: 20px; /* Adjust the top position as needed */
+        right: 20px; /* Adjust the right position as needed */}
+    </style>
+</head>
+
+<body>
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Noms sélectionnés</th>
+                </tr>
+            </thead>
+            <tbody id="selectedNames">
+                <!-- This is where selected names will be added -->
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <label for="selectName">Sélectionnez un nom :</label>
+        <select id="fullname"></select>
+        <button class="ok-button" id="addName">OK</button>
+    </div>
+    <form id="selectNamesForm" action="/MyGestion-Ocp/Faire-demande2" method="post">
+        <input type="hidden" id="selectedNamesInput" name="selectedNames">
+        <button class="ok-button" id="submitSelectedNames">Submit Selected Names</button>
+    </form>
+    <script>
+        const selectedNames = [];
+        // Function to fetch and populate names
+        function populateNames() {
+            // Send an AJAX GET request to the server to fetch names
+            fetch('/MyGestion-Ocp/getNames')
+                .then(response => response.json())
+                .then(data => {
+                    const selectElement = document.getElementById('fullname');
+    
+                    // Populate the select dropdown with names
+                    data.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        selectElement.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching names:', error);
+                });
+        }
+    
+        // Populate names when the page loads
+        populateNames();
+    
+        // Function to remove a name when the "Delete" button is clicked
+        // Function to remove a name when the "Delete" button is clicked
+        function removeName(row) {
+            const deletedName = row.cells[0].textContent; // Get the name from the first cell
+            const index = selectedNames.indexOf(deletedName);
+
+            if (index !== -1) {
+                // Remove the name from the array
+                selectedNames.splice(index, 1);
+            }
+
+            row.remove();
+            console.log('les noms aprés suppression', selectedNames)
+        }
+    
+        // Handle adding a name to the table
+        document.getElementById('addName').addEventListener('click', function () {
+            const selectElement = document.getElementById('fullname');
+            const selectedName = selectElement.value;
+    
+            if (selectedName) {
+                
+                // Push the selected name into the array
+                selectedNames.push(selectedName);
+                    
+                
+                // Create a new row in the table
+                const newRow = document.createElement('tr');
+                const newNameCell = document.createElement('td');
+                newNameCell.textContent = selectedName;
+    
+                const deleteButtonCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-button');
+                deleteButton.addEventListener('click', () => removeName(newRow));
+                deleteButtonCell.appendChild(deleteButton);
+    
+                // Add the cells to the row
+                newRow.appendChild(newNameCell);
+                newRow.appendChild(deleteButtonCell);
+    
+                // Add the row to the table
+                document.getElementById('selectedNames').appendChild(newRow);
+                
+    
+                // Reset the select dropdown
+                selectElement.value = '';
+            }
+        });
+        document.getElementById('submitSelectedNames').addEventListener('click', function () {
+
+            if (selectedNames.length === 0) {
+                console.error('No selected names to submit');
+                return;
+            }
+            // Set the value of the hidden input field with selectedNames
+            document.getElementById('selectedNamesInput').value = selectedNames.join(',');
+
+            // Submit the form
+            document.getElementById('submitNamesForm').submit();
+        });
+       
+
+    </script>
+    
+   
+    </div>
+</body>
+</html>

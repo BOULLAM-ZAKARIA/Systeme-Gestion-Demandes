@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+          
+            height: 100vh;
+        }
+
+     
+
+        h1 {
+            color: #333;
+            text-align: center; 
+        }
+        .line-container {
+             text-align: center;
+        }
+      
+        input[type="file"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .next-button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .next-button:hover {
+            background-color: #45a049;
+        }
+        .my-element {
+            margin: 25px; /* You can adjust the value (in pixels, em, rem, etc.) as needed */
+        }   
+    </style>
+</head>
+<body>
+    <div class="my-element">
+        <h1>Faire une demande</h1>
+        <form action="/MyGestion-Ocp/Faire-demande1" method="post" enctype="multipart/form-data">
+            <label for="file">Sélectionnez un fichier à télécharger :</label>
+            <input type="file" name="file" id="file">
+            <label for="title">Titre de la demande:</label>
+            <input type="text" name="title" id="title">
+            <label for="comment">Commentaire:</label>
+            <textarea name="comment" id="comment"></textarea>
+            <div  class="line-container">
+            <input  type="submit" value="Next" name="submit" class="next-button" >
+         </div>
+        </form>
+    </div>
+</body>
+</html>

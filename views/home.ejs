@@ -1,0 +1,167 @@
+
+
+
+<!DOCTYPE html>
+<html lang="fr-FR" dir="ltr">
+<head>
+
+    
+    <style>
+        body {
+            background: url("./IMAGES/rm222batch3-kul-17.jpg") center top repeat-x;
+
+        }
+
+        body .accueil-header, .accueil-body, .accueil-footer {
+            width: 100%;
+        }
+
+        .accueil-header {
+            text-align: center;
+            height: 200px;
+        }
+
+        .accueil-body {
+            text-align: center;
+        }
+
+        .accueil-footer {
+            position: absolute;
+            bottom: 0px;
+            left: 18%;
+            width: 60%;
+            background: #f9f6ea;
+            border-top: 1px solid #d2d6de;
+            padding: 12px;
+        }
+
+        .accueil-component {
+            width: 500px;
+            height: 184px;
+            display: inline-block;
+            padding-top: 6px;
+        }
+
+        .accueil-component:hover {
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 45px, rgba(0, 0, 0, 0.22) 0px 10px 18px;
+            cursor: pointer;
+        }
+
+        .materiel-color-orange {
+            background: #d3ff64d7;
+        }
+
+        .materiel-color-gray {
+            background: #cbafbed7;
+        }
+
+        .accueil-component-icon {
+            width: 40%;
+            margin: auto;
+
+            border: 0px solid;
+            width: 208px;
+            border-radius: 110px;
+        }
+
+        .accueil-component-icon img {
+            width: 208px;
+            height: 208px;
+            border-radius: 50%;
+            border: 4px solid #9da7dc;
+        }
+
+        .accueil-component-title {
+            display: inline-block;
+            border: 0px solid;
+            position: relative;
+            background: #eeeeee;
+            width: 97%;
+            bottom: 15px;
+            z-index: -1;
+        }
+
+        .accueil-component-title p {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .pull-right {
+            float: left !important;
+        }
+
+        .pull-left {
+            float: right !important;
+        }
+        .image {
+            position: absolute; /* Position the image relative to its container */
+            top: 20px; /* Set the distance from the top */
+            left: 1150px; /* Set the distance from the left */
+        }
+        .logout-container {
+        position: fixed;
+        top: 20px; /* Adjust the top position as needed */
+        right: 20px; /* Adjust the right position as needed */}
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+</head>
+<body>
+    <div class="accueil-header">
+        <a href="https://www.ocpgroup.ma/fr"><img class="header-log" id="logo-men" src="assets/img/brand/ocp-logo-4F7287992D-seeklogo.com.png" style="width: 60px;"></a>
+    </div>
+    <div class="accueil-body">
+
+        <table style="margin: auto;">
+            <tr>
+                <td>
+                    <div class="accueil-component materiel-color-gray" >
+                        <div class="accueil-component-icon">
+                            <a href="./Faire-demande1">
+                                <img src="assets/img/brand/B.webp" />
+                            </a>
+                        </div>
+                        <div class="accueil-component-title">
+                            <p>Demander</p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="accueil-component materiel-color-orange" >
+                        <div class="accueil-component-icon">
+                            <a href="./suivre-demande">
+                                <img src="assets/img/brand/D.webp" />
+                            </a>
+                        </div>
+                        <div class="accueil-component-title">
+                            <p>Suivre</p>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+
+
+
+    </div>
+ 
+   
+      
+      <!-- Example of a logout button in an HTML template -->
+    <div class="logout-container">
+        <form action="/" method="get">
+            <button type="submit">
+                <i class="fas fa-sign-out-alt"></i> <!-- Font Awesome logout icon -->
+            </button>
+        </form>
+    </div>
+
+   
+
+</body>
+
+</html>
+

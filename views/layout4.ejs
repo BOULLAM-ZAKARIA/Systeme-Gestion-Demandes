@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   
+  
+    <style>
+        /* Additional styles for responsiveness */
+        body {
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+            /* Add more responsive styles as needed */
+        }
+        .sidenav-toggler {
+            position: absolute;
+            top: 15px; /* Adjust the top position as needed */
+            right: 15px; /* Adjust the right position as needed */
+            z-index: 1050;
+        }
+        .hadik {
+        width: 150px;
+        height: 100px;
+        }
+        /* Reset some default styles for the example */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidenav a {
+    display: block;
+    padding: 14px 16px;
+    color: white;
+    text-decoration: none;
+}
+
+/* Navbar item styles on hover for all links except the first one */
+.sidenav-nav li:not(:first-child) .nav-link:hover {
+    background-color: #9f9a9a;
+    color: rgb(128, 112, 112);
+}
+.brand-image {
+    position: absolute;
+    left: 0;
+    margin-left: 40px; /* Optional margin for spacing */
+    max-width: 200px; /* Maximum width of the image */
+    max-height: 200px; /* Maximum height of the image */
+    /* You can add additional styles as needed */
+}
+
+
+    </style>
+</head>
+<body>
+  
+    <nav class="sidenav navbar navbar-vertical  fixed-left  navbar-expand-xs navbar-light bg-white"  id="sidenav-main" >
+        <div class="scrollbar-inner">
+          <!-- Brand -->
+          <div class="sidenav-header  align-items-center">
+           
+          </div>
+          <div class="navbar-inner">
+            <!-- Collapse -->
+            <div class="collapse navbar-collapse" id="sidenav-collapse-main">
+              <!-- Nav items -->
+              <ul class="navbar-nav">
+             
+            
+              
+                <a  href="https://www.ocpgroup.ma/">
+            
+                <img class="brand-image" src="../assets/img/brand/th2.png" alt="...">
+
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+     
+                 
+        
+        <%- body %>
+      </div>
+      
+
+</body>
+</html>

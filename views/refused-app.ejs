@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suivre</title>
+
+    <style>
+         /* Hover effect */
+    tbody tr:hover { /* Apply hover effect only to table rows */
+            background-color: #ccc6c6; /* Your preferred hover color */
+        }
+        .view-button {
+        background-color: green;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        border-radius: 4px;
+        
+    }
+    .view-button :hover {
+    background-color: #3c6e3e; /* Change the background color on hover */
+}    
+/* Your button styles */
+.my-button {
+    background-color: #4caf50;
+    color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* Adding a smooth transition effect */
+}
+
+/* Hover effect */
+.my-button:hover {
+    background-color: #39663b; /* Change the background color on hover */
+}
+ /* Hover effect */
+ tbody tr:hover { /* Apply hover effect only to table rows */
+            background-color: #ccc6c6; /* Your preferred hover color */
+        }
+        .view-button {
+        background-color: rgb(108, 115, 108);
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        border-radius: 4px;
+        
+    }    
+    .approuver-button {
+        background-color: green;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        border-radius: 4px;
+    }
+
+    .refuser-button {
+        background-color: red;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        border-radius: 4px;
+    }
+ 
+
+    </style>
+</head>
+<body>
+    <div >
+        <div class="container-fluid">
+          <div class="header-body">
+            <div class="row align-items-center py-4">
+              <div class="col-lg-6 col-7">
+                <h6 class="h2 text-white d-inline-block mb-0">Tables</h6>
+                <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+               
+                </nav>
+              </div>
+             
+            </div>
+          </div>
+        </div>
+    <!-- Page content -->
+  <div class="container-fluid mt--6">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <!-- Card header -->
+          <div class="card-header border-0">
+            <h3 class="mb-0">Demandes refusées par responsable suivant</h3>
+          </div>
+          <!-- Light table -->
+          <div class="table-responsive">
+            <table class="table align-items-center table-flush">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col"  >Titre</th>
+                  <th scope="col" >Commentaire</th>
+                  <th scope="col" >Date</th>
+                  <th scope="col" >Demande</th>
+                  <th scope="col" >Approuver</th>
+                  <th scope="col" >Refuser</th>
+            
+                  
+               
+                </tr>
+              </thead>
+              <tbody id="demandeData">
+                <% if (demands.length > 0) { %>
+                  <% demands.forEach(entry => { %>
+                    <tr>
+                      <td><%= entry.titre %></td>
+                      <td><%= entry.commentaire %></td>
+                      <td><%= entry.date_demande %></td>
+                      <td>
+                        <button class="view-button" onclick="viewPDF('<%= entry.iddemande %>')">Visualiser</button>
+                        <!-- Use the 'entry.id' to uniquely identify the PDF file -->
+                      </td>
+                      <td>
+                        <% if (entry.statut === 1) { %>
+                          <span class="approuve-text">Approuvé</span>
+                        <% } else { %>
+                          <button class="approuver-button" onclick="approuver('<%= entry.iddemande %>', this)">Approuver</button>
+                        <% } %>
+                      </td>
+                      <td>
+                         <button class="refuser-button" onclick="refuser('<%= entry.iddemande %>')">Refuser</button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                
+                <% } %>
+              </tbody>
+            
+             </table>
+
+
+
+
+
+             <script>
+                function viewPDF(id) {
+                fetch(`/MyGestion-Ocp/view-pdf/${id}`)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        // Handle the blob data to open the PDF, such as creating a URL and opening in a new tab
+                        const file = new Blob([blob], { type: 'application/pdf' });
+                        const fileURL = URL.createObjectURL(file);
+                        window.open(fileURL); // Opens the PDF in a new tab
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+        
+        
+                function refuser(id) {
+    // Use prompt to get the comment from the user
+    const comment = prompt('Enter your justification:');
+
+    // Check if the user entered a comment
+    if (comment !== null) {
+        // Call the backend route to update the statut and add the comment
+        fetch(`/MyGestion-Ocp/refuser-demande/${id}?comment=${encodeURIComponent(comment)}`)
+            .then(response => {
+                if (response.ok) {
+                    // Replace the "Refuser" button with the "Refusée" text
+                    const refuserButton = document.getElementById(`refuserButton${id}`);
+                    if (refuserButton) {
+                        refuserButton.innerHTML = '<span class="approuve-text">Refusée</span>';
+                        location.reload()
+                    } else {
+                        console.error('Refuser button element not found');
+                    }
+                } else {
+                    console.error('Error:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+}
+
+        
+        
+        
+                  function approuver(id, button) {
+                    if (confirm("Êtes-vous sûr d'approuver cette demande?")) {
+                    // Fetch the order (r) of the current user for the specific demand
+          fetch(`/MyGestion-Ocp/get-order/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                const order = data.order;
+
+                // Call the backend route to update the status for the next approver
+                fetch(`/MyGestion-Ocp/approuver-demande-refused/${id}?order=${order}`)
+                    .then(response => {
+                        if (response.ok) {
+                            // Replace the "Approuver" button with a text label
+                            const approuverButtonCell = button.parentElement;
+                            approuverButtonCell.innerHTML = '<span class="approuve-text">Approuvé</span>';
+                            location.reload();
+                        } else {
+                            console.error('Error:', response.statusText);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching user order:', error);
+            });
+                    }}
+
+   // Function to handle table search
+                         function searchTable() {
+                                    // Get the input value
+                                    var input = document.getElementById('searchInput').value.toLowerCase();
+
+                                    // Get the table rows
+                                    var rows = document.getElementById('demandeData').getElementsByTagName('tr');
+
+                                    // Loop through all table rows
+                                    for (var i = 0; i < rows.length; i++) {
+                                        // Get the title cell value (assuming it's the first cell in each row)
+                                        var title = rows[i].getElementsByTagName('td')[0];
+
+                                        // If the title contains the input value, show the row; otherwise, hide it
+                                        if (title) {
+                                            var titleText = title.textContent || title.innerText;
+                                            if (titleText.toLowerCase().indexOf(input) > -1) {
+                                                rows[i].style.display = '';
+                                            } else {
+                                                rows[i].style.display = 'none';
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Attach an event listener to the input element
+                                document.getElementById('searchInput').addEventListener('input', searchTable);
+                
+            </script>
+        
+     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
