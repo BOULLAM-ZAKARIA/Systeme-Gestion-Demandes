@@ -1,3 +1,5 @@
+USE projectusers;
+
 CREATE TABLE IF NOT EXISTS users (
   idUsers       INT AUTO_INCREMENT PRIMARY KEY,
   fullname      VARCHAR(255),

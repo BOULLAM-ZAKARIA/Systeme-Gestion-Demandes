@@ -87,7 +87,7 @@ router.post('/login', (req, res) => {
     connection.query("Select type from users where email = ?", [email], (error, results) => {
         if (error) {
             console.error('Error fetching type:', error);
-            res.send('Error fetching idUsers');
+            res.send('Database error: ' + error.message);
         } else {
             if (results.length === 0) {
                 return res.redirect("/");
