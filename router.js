@@ -267,8 +267,7 @@ router.get('/approuver', ensureAuthenticated, async (_req, res) => {
         for (const x of Listordre) {
             if (x[1] > 1 && x[2] === 0) {
                 const results3 = await queryDatabase(query5, [x[0], x[1] - 1]);
-                const statut = results3[0].statut;
-                if (statut === 1) {
+                if (results3.length > 0 && results3[0].statut === 1) {
                     const results4 = await queryDatabase(query6, [x[0]]);
                     result = result.concat(results4);
                 }
