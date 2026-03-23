@@ -284,7 +284,7 @@ router.get('/approuver', ensureAuthenticated, async (req, res) => {
         res.render('approuver', { layout: 'layout2', demands: result });
     } catch (error) {
         console.error('Error in /approuver route:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: error.message, stack: error.stack });
     }
 });
 
