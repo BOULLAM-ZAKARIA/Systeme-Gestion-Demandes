@@ -254,15 +254,22 @@ router.get('/view-pdf/:id', (req, res) => {
 router.get('/approuver', ensureAuthenticated, async (req, res) => {
     const userEmail = req.session.user;
     try {
-        const query2 = 'SELECT iddemande, ordre, statut FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and iddemande in (SELECT iddemande FROM(SELECT iddemande FROM demande AS tableau WHERE iddemande IN (SELECT iddemande FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)) order by date_demande) AS id1)';
-        const query4 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande IN (SELECT iddemande FROM d_a WHERE statut = 0 and Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and ordre=?) order by date_demande';
+        // Fetch fullname first to avoid collation mismatch in cross-table comparisons
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) {
+            return res.render('approuver', { layout: 'layout2', demands: [] });
+        }
+        const fullname = nameResults[0].fullname;
+
+        const query2 = 'SELECT iddemande, ordre, statut FROM d_a WHERE Nomapprobateur = ? and iddemande in (SELECT iddemande FROM(SELECT iddemande FROM demande AS tableau WHERE iddemande IN (SELECT iddemande FROM d_a WHERE Nomapprobateur = ?) order by date_demande) AS id1)';
+        const query4 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande IN (SELECT iddemande FROM d_a WHERE statut = 0 and Nomapprobateur = ? and ordre=?) order by date_demande';
         const query5 = 'SELECT statut FROM d_a WHERE iddemande=? and ordre=?';
         const query6 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande = ?';
 
-        const results1 = await queryDatabase(query2, [userEmail, userEmail]);
+        const results1 = await queryDatabase(query2, [fullname, fullname]);
         const Listordre = results1.map(obj => Object.values(obj));
 
-        const results2 = await queryDatabase(query4, [userEmail, 1]);
+        const results2 = await queryDatabase(query4, [fullname, 1]);
         let result = results2.slice();
 
         for (const x of Listordre) {
@@ -302,30 +309,32 @@ function queryDatabase(query, values) {
 }
 
 // Route pour le boutton approuver
-router.get('/approuver-demande/:id', ensureAuthenticated, (req, res) => {
+router.get('/approuver-demande/:id', ensureAuthenticated, async (req, res) => {
     const iddemande = req.params.id;
-    const updateQuery = 'UPDATE d_a SET statut = 1 WHERE iddemande = ? AND Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)';
-
-    connection.query(updateQuery, [iddemande, email], (error, _results) => {
-        if (error) {
-            console.error('Error updating statut:', error);
-            res.status(500).json({ error: 'Error updating statut' });
-        } else {
-            res.sendStatus(200);
-        }
-    });
+    const userEmail = req.session.user;
+    try {
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) return res.status(404).json({ error: 'User not found' });
+        const fullname = nameResults[0].fullname;
+        await queryDatabase('UPDATE d_a SET statut = 1 WHERE iddemande = ? AND Nomapprobateur = ?', [iddemande, fullname]);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error updating statut:', error);
+        res.status(500).json({ error: 'Error updating statut' });
+    }
 });
 
 // Route pour extraire l'ordre d'approbateur pour une demande donnée
 router.get('/get-order/:iddemande', ensureAuthenticated, async (req, res) => {
     const { iddemande } = req.params;
-    const query = 'SELECT ordre FROM d_a WHERE iddemande = ? AND Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)';
-
+    const userEmail = req.session.user;
     try {
-        const results = await queryDatabase(query, [iddemande, email]);
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) return res.status(404).json({ error: 'User not found' });
+        const fullname = nameResults[0].fullname;
+        const results = await queryDatabase('SELECT ordre FROM d_a WHERE iddemande = ? AND Nomapprobateur = ?', [iddemande, fullname]);
         if (results.length > 0) {
-            const order = results[0].ordre;
-            res.json({ order });
+            res.json({ order: results[0].ordre });
         } else {
             res.status(404).json({ error: 'Order not found for the current user and demand.' });
         }
@@ -351,19 +360,20 @@ router.get('/approuver-demande-refused/:iddemande', ensureAuthenticated, async (
 });
 
 // Route pour le boutton refuser
-router.get('/refuser-demande/:id', ensureAuthenticated, (req, res) => {
+router.get('/refuser-demande/:id', ensureAuthenticated, async (req, res) => {
     const iddemande = req.params.id;
     const comment = req.query.comment;
-    const updateQuery = 'UPDATE d_a SET statut = 2, commentaire = ? WHERE iddemande = ? AND Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)';
-
-    connection.query(updateQuery, [comment, iddemande, email], (error, _results) => {
-        if (error) {
-            console.error('Error updating statut and commentaire:', error);
-            res.status(500).json({ error: 'Error updating statut and commentaire' });
-        } else {
-            res.sendStatus(200);
-        }
-    });
+    const userEmail = req.session.user;
+    try {
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) return res.status(404).json({ error: 'User not found' });
+        const fullname = nameResults[0].fullname;
+        await queryDatabase('UPDATE d_a SET statut = 2, commentaire = ? WHERE iddemande = ? AND Nomapprobateur = ?', [comment, iddemande, fullname]);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Error updating statut and commentaire:', error);
+        res.status(500).json({ error: 'Error updating statut and commentaire' });
+    }
 });
 
 // Route pour afficher les demandes refusées pour le demandeur
@@ -459,32 +469,39 @@ router.get('/demandes-approuvees', (_req, res) => {
 });
 
 // Route dédié pour l'approbateur pour afficher les demandes approuvées par lui meme
-router.get('/app-demandes-approuvees', ensureAuthenticated, (_req, res) => {
-    const query = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) AS date_demande, commentaire FROM demande WHERE iddemande in (SELECT iddemande FROM d_a WHERE Nomapprobateur = (SELECT fullname From users where email = ? ) AND statut = 1 ) order by date_demande';
-
-    connection.query(query, [email, email], (error, results) => {
-        if (error) {
-            console.error('Error fetching data from the demande table:', error);
-            res.status(500).json({ error: 'Error fetching data' });
-        } else {
-            results.sort((a, b) => {
-                const dateA = new Date(a.date_demande.split('/').reverse().join('/'));
-                const dateB = new Date(b.date_demande.split('/').reverse().join('/'));
-                return dateB - dateA;
-            });
-            res.render('approuved', { layout: 'layout2', demands: results });
-        }
-    });
+router.get('/app-demandes-approuvees', ensureAuthenticated, async (req, res) => {
+    const userEmail = req.session.user;
+    try {
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) return res.render('approuved', { layout: 'layout2', demands: [] });
+        const fullname = nameResults[0].fullname;
+        const query = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) AS date_demande, commentaire FROM demande WHERE iddemande in (SELECT iddemande FROM d_a WHERE Nomapprobateur = ? AND statut = 1) order by date_demande';
+        const results = await queryDatabase(query, [fullname]);
+        results.sort((a, b) => {
+            const dateA = new Date(a.date_demande.split('/').reverse().join('/'));
+            const dateB = new Date(b.date_demande.split('/').reverse().join('/'));
+            return dateB - dateA;
+        });
+        res.render('approuved', { layout: 'layout2', demands: results });
+    } catch (error) {
+        console.error('Error fetching data from the demande table:', error);
+        res.status(500).json({ error: 'Error fetching data' });
+    }
 });
 
 // Route dédié pour l'approbateur pour afficher les demandes approuvées par celui qui le précède après qu'il l'a refusé
-router.get('/app-demandes-refusees', ensureAuthenticated, async (_req, res) => {
+router.get('/app-demandes-refusees', ensureAuthenticated, async (req, res) => {
+    const userEmail = req.session.user;
     try {
-        const query1 = 'SELECT iddemande, ordre FROM d_a WHERE statut = 1 AND Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)';
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [userEmail]);
+        if (nameResults.length === 0) return res.render('refused-app', { layout: 'layout2', demands: [] });
+        const fullname = nameResults[0].fullname;
+
+        const query1 = 'SELECT iddemande, ordre FROM d_a WHERE statut = 1 AND Nomapprobateur = ?';
         const query3 = 'SELECT iddemande, statut, commentaire FROM d_a WHERE iddemande=? and ordre=?';
         const query7 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande';
 
-        const results1 = await queryDatabase(query1, [email]);
+        const results1 = await queryDatabase(query1, [fullname]);
         const Listordre = results1.map(obj => Object.values(obj));
 
         let result = [];
@@ -665,28 +682,33 @@ router.delete('/admin/delete/:userId', ensureAuthenticated, (req, res) => {
 });
 
 // Route dédié au secrétaire pour consulter la boite de réception de son responsable
-router.get('/messagerie-responsable', ensureAuthenticated, async (_req, res) => {
+router.get('/messagerie-responsable', ensureAuthenticated, async (req, res) => {
+    const userEmail = req.session.user;
     try {
         const query  = 'SELECT email FROM users WHERE idUsers = (SELECT idsecretaire FROM users WHERE email=?)';
-        const query2 = 'SELECT iddemande, ordre, statut FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and iddemande in (SELECT iddemande FROM(SELECT iddemande FROM demande AS tableau WHERE iddemande IN (SELECT iddemande FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)) order by date_demande) AS id1)';
-        const query4 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande IN (SELECT iddemande FROM d_a WHERE statut = 0 and Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and ordre=?) order by date_demande';
         const query5 = 'SELECT statut FROM d_a WHERE iddemande=? and ordre=?';
         const query6 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande = ?';
 
-        const resu = await queryDatabase(query, [email]);
+        const resu = await queryDatabase(query, [userEmail]);
         const email2 = resu[0].email;
 
-        const results1 = await queryDatabase(query2, [email2, email2]);
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [email2]);
+        if (nameResults.length === 0) return res.render('annexe', { layout: 'layout', demands: [] });
+        const fullname2 = nameResults[0].fullname;
+
+        const query2 = 'SELECT iddemande, ordre, statut FROM d_a WHERE Nomapprobateur = ? and iddemande in (SELECT iddemande FROM(SELECT iddemande FROM demande AS tableau WHERE iddemande IN (SELECT iddemande FROM d_a WHERE Nomapprobateur = ?) order by date_demande) AS id1)';
+        const query4 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande IN (SELECT iddemande FROM d_a WHERE statut = 0 and Nomapprobateur = ? and ordre=?) order by date_demande';
+
+        const results1 = await queryDatabase(query2, [fullname2, fullname2]);
         const Listordre = results1.map(obj => Object.values(obj));
 
-        const results2 = await queryDatabase(query4, [email2, 1]);
+        const results2 = await queryDatabase(query4, [fullname2, 1]);
         let result = results2.slice();
 
         for (const x of Listordre) {
             if (x[1] > 1 && x[2] === 0) {
                 const results3 = await queryDatabase(query5, [x[0], x[1] - 1]);
-                const statut = results3[0].statut;
-                if (statut === 1) {
+                if (results3.length > 0 && results3[0].statut === 1) {
                     const results4 = await queryDatabase(query6, [x[0]]);
                     result = result.concat(results4);
                 }
@@ -707,16 +729,21 @@ router.get('/messagerie-responsable', ensureAuthenticated, async (_req, res) => 
 });
 
 // Route dédié au secrétaire pour consulter les demandes refusées par l'approbateur qui suit son responsable
-router.get('/messagerie-responsable-B', ensureAuthenticated, async (_req, res) => {
+router.get('/messagerie-responsable-B', ensureAuthenticated, async (req, res) => {
+    const userEmail = req.session.user;
     try {
         const query  = 'SELECT email FROM users WHERE idUsers = (SELECT idsecretaire FROM users WHERE email=?)';
-        const query1 = 'SELECT iddemande, ordre FROM d_a WHERE statut = 1 AND Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)';
         const query3 = 'SELECT iddemande, statut, commentaire FROM d_a WHERE iddemande=? and ordre=?';
         const query7 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande';
 
-        const resu = await queryDatabase(query, [email]);
+        const resu = await queryDatabase(query, [userEmail]);
         const email3 = resu[0].email;
-        const results1 = await queryDatabase(query1, [email3]);
+
+        const nameResults = await queryDatabase('SELECT fullname FROM users WHERE email = ?', [email3]);
+        if (nameResults.length === 0) return res.render('refused-app', { layout: 'layout', demands: [] });
+        const fullname3 = nameResults[0].fullname;
+
+        const results1 = await queryDatabase('SELECT iddemande, ordre FROM d_a WHERE statut = 1 AND Nomapprobateur = ?', [fullname3]);
         const Listordre = results1.map(obj => Object.values(obj));
 
         let result = [];
