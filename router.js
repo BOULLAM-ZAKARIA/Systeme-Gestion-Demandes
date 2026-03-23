@@ -251,17 +251,18 @@ router.get('/view-pdf/:id', (req, res) => {
 });
 
 // Routes pour afficher les demandes à approuver par l'approbateur
-router.get('/approuver', ensureAuthenticated, async (_req, res) => {
+router.get('/approuver', ensureAuthenticated, async (req, res) => {
+    const userEmail = req.session.user;
     try {
         const query2 = 'SELECT iddemande, ordre, statut FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and iddemande in (SELECT iddemande FROM(SELECT iddemande FROM demande AS tableau WHERE iddemande IN (SELECT iddemande FROM d_a WHERE Nomapprobateur = (SELECT fullname FROM users WHERE email = ?)) order by date_demande) AS id1)';
         const query4 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande IN (SELECT iddemande FROM d_a WHERE statut = 0 and Nomapprobateur = (SELECT fullname FROM users WHERE email = ?) and ordre=?) order by date_demande';
         const query5 = 'SELECT statut FROM d_a WHERE iddemande=? and ordre=?';
         const query6 = 'SELECT iddemande, titre, DATE_FORMAT(date_demande, "%d/%m/%Y" ) as date_demande FROM demande WHERE iddemande = ?';
 
-        const results1 = await queryDatabase(query2, [email, email]);
+        const results1 = await queryDatabase(query2, [userEmail, userEmail]);
         const Listordre = results1.map(obj => Object.values(obj));
 
-        const results2 = await queryDatabase(query4, [email, 1]);
+        const results2 = await queryDatabase(query4, [userEmail, 1]);
         let result = results2.slice();
 
         for (const x of Listordre) {
